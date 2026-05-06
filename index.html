@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Production Progress Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <h1>Production Progress Tracker</h1>
+        <p class="subtitle">Monthly target vs actual production progress</p>
+      </div>
+
+      <button id="refreshBtn" class="btn btn-light">Refresh</button>
+    </header>
+
+    <section class="toolbar card">
+      <div class="field">
+        <label for="monthPicker">Month</label>
+        <input type="month" id="monthPicker" />
+      </div>
+
+      <div class="field">
+        <label>Display</label>
+        <div class="segmented">
+          <button class="segment active" data-type="PV">PV</button>
+          <button class="segment" data-type="AC">AC</button>
+          <button class="segment" data-type="WC">WC</button>
+        </div>
+      </div>
+
+      <div class="last-update">
+        <span>Last Update</span>
+        <strong id="lastUpdateText">-</strong>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="metric-card card">
+        <span class="metric-label">Selected Unit</span>
+        <strong id="selectedTypeText">PV</strong>
+        <small id="selectedDescText">Pressure Vessel</small>
+      </article>
+
+      <article class="metric-card card">
+        <span class="metric-label">Monthly Target</span>
+        <strong id="targetText">0</strong>
+      </article>
+
+      <article class="metric-card card">
+        <span class="metric-label">Actual</span>
+        <strong id="actualText">0</strong>
+      </article>
+
+      <article class="metric-card card">
+        <span class="metric-label">Progress</span>
+        <strong id="progressText">0%</strong>
+      </article>
+    </section>
+
+    <section class="card progress-panel">
+      <div class="panel-head">
+        <div>
+          <h2 id="progressTitle">PV Progress</h2>
+          <p id="progressSubTitle">Actual is counted when PV completed both process 14A and 14B.</p>
+        </div>
+
+        <a href="target.html" class="btn btn-primary">Update Target</a>
+      </div>
+
+      <div class="progress-bar-wrap">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+
+      <div class="progress-footer">
+        <span id="targetFooter">Target: 0</span>
+        <span id="actualFooter">Actual: 0</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

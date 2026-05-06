@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Update Production Target</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Production target setup</p>
+        <h1>Update Target</h1>
+        <p class="subtitle">Set monthly target for PV, AC, or WC</p>
+      </div>
+
+    </header>
+
+    <section class="card form-card">
+      <div class="field">
+        <label for="typeSelect">Unit Type</label>
+        <select id="typeSelect">
+          <option value="PV">PV</option>
+          <option value="AC">AC</option>
+          <option value="WC">WC</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="monthPicker">Month</label>
+        <input type="month" id="monthPicker" />
+      </div>
+
+      <div class="field">
+        <label for="targetInput">Target Quantity</label>
+
+        <input
+          type="number"
+          id="targetInput"
+          min="0"
+          step="1"
+          placeholder="Example: 30"
+        />
+
+        <small id="targetError" class="field-error"></small>
+      </div>
+
+      <div class="form-actions">
+        <a href="index.html" class="btn btn-secondary">Back to Dashboard</a>
+        <button id="saveBtn" class="btn btn-primary">Save Target</button>
+      </div>
+
+      
+
+      <p id="statusText" class="status-text"></p>
+
+      <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-box">
+          <div class="spinner"></div>
+          <strong>Saving target...</strong>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script type="module" src="target.js"></script>
+</body>
+</html>
