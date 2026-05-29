@@ -29,8 +29,14 @@ const actualFooter = document.getElementById("actualFooter");
 const actualNoteText = document.getElementById("actualNoteText");
 const progressNoteText = document.getElementById("progressNoteText");
 
+const targetLabel = document.getElementById("targetLabel");
+const actualLabel = document.getElementById("actualLabel");
+
 let selectedType = "PV";
 let selectedView = "monthly";
+let autoRefreshTimer = null;
+let lastDashboardUpdateAt = null;
+let relativeUpdateTimer = null;
 
 const TYPE_LABEL = {
   PV: "Pressure Vessel",
@@ -69,20 +75,38 @@ function getCurrentMonthKey() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatDateTime(date = new Date()) {
-  return date
-    .toLocaleString("en-GB", {
-      timeZone: "Asia/Kuala_Lumpur",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true
-    })
-    .replace("am", "AM")
-    .replace("pm", "PM");
+function formatRelativeTime(date) {
+  if (!date) return "-";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffSeconds = Math.max(0, Math.floor(diffMs / 1000));
+
+  if (diffSeconds < 60) return "Just now";
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) {
+    return `${diffMinutes} minute${diffMinutes === 1 ? "" : "s"} ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+}
+
+function updateLastUpdateText() {
+  lastUpdateText.textContent = formatRelativeTime(lastDashboardUpdateAt);
+}
+
+function startRelativeUpdateTimer() {
+  if (relativeUpdateTimer) {
+    clearInterval(relativeUpdateTimer);
+  }
+
+  relativeUpdateTimer = setInterval(updateLastUpdateText, 30000);
 }
 
 function getDateRange(dateKey) {
@@ -262,6 +286,20 @@ async function getActual(periodKey, type, viewMode) {
   return null;
 }
 
+function startAutoRefresh() {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+  }
+
+  autoRefreshTimer = setInterval(async () => {
+    try {
+      await loadDashboard();
+    } catch (err) {
+      console.error("Auto refresh failed", err);
+    }
+  }, 60000);
+}
+
 function setLoading(isLoading) {
   refreshBtn.disabled = isLoading;
   refreshBtn.textContent = isLoading ? "Loading..." : "Refresh";
@@ -288,7 +326,32 @@ function render({ type, target, actual }) {
     : 0;
 
   progressText.textContent = hasActual ? `${percent}%` : "-";
+
+  progressText.classList.remove(
+    "text-red",
+    "text-orange",
+    "text-green"
+  );
+
+  if (percent < 50) {
+    progressText.classList.add("text-red");
+  } else if (percent < 80) {
+    progressText.classList.add("text-orange");
+  } else {
+    progressText.classList.add("text-green");
+  }
+
   progressBar.style.width = `${Math.min(percent, 100)}%`;
+
+  progressBar.classList.remove("progress-red", "progress-orange", "progress-green");
+
+  if (percent < 50) {
+    progressBar.classList.add("progress-red");
+  } else if (percent < 80) {
+    progressBar.classList.add("progress-orange");
+  } else {
+    progressBar.classList.add("progress-green");
+  }
 
   progressTitle.textContent = `${type} Progress`;
 
@@ -300,10 +363,20 @@ function render({ type, target, actual }) {
     progressSubTitle.textContent = "Actual is counted when Water-Cooled Chiller completed process H1.";
   }
 
-  targetFooter.textContent = `Target: ${target}`;
-  actualFooter.textContent = `Actual: ${hasActual ? actual : "-"}`;
+  if (selectedView === "daily") {
+    targetFooter.textContent = `Daily Target: ${target}`;
+    actualFooter.textContent = `Daily Actual: ${hasActual ? actual : "-"}`;
+    targetLabel.textContent = "Daily Target";
+    actualLabel.textContent = "Daily Actual";
+  } else {
+    targetFooter.textContent = `Monthly Target: ${target}`;
+    actualFooter.textContent = `Monthly Actual: ${hasActual ? actual : "-"}`;
+    targetLabel.textContent = "Monthly Target";
+    actualLabel.textContent = "Monthly Actual";
+  }
 
-  lastUpdateText.textContent = formatDateTime();
+  lastDashboardUpdateAt = new Date();
+  updateLastUpdateText();
 }
 
 async function loadDashboard() {
@@ -378,3 +451,7 @@ periodPicker.addEventListener("change", loadDashboard);
 refreshBtn.addEventListener("click", loadDashboard);
 
 loadDashboard();
+
+// Auto refresh every minute
+startAutoRefresh();
+startRelativeUpdateTimer();

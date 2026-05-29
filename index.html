@@ -11,13 +11,22 @@
     <header class="hero">
       <div>
         <h1>Production Progress Tracker</h1>
-        <p class="subtitle">Monthly target vs actual production progress</p>
+        <p class="subtitle">Target vs actual production progress</p>
       </div>
 
       <button id="refreshBtn" class="btn btn-light">Refresh</button>
     </header>
 
     <section class="toolbar card">
+      <div class="field">
+        <label>Display</label>
+        <div class="segmented">
+          <button class="segment active" data-type="PV">PV</button>
+          <button class="segment" data-type="AC">AC</button>
+          <button class="segment" data-type="WC">WC</button>
+        </div>
+      </div>
+
       <div class="field">
         <label>View Mode</label>
         <div class="segmented">
@@ -29,15 +38,6 @@
       <div class="field">
         <label id="periodLabel" for="periodPicker">Month</label>
         <input type="month" id="periodPicker" />
-      </div>
-
-      <div class="field">
-        <label>Display</label>
-        <div class="segmented">
-          <button class="segment active" data-type="PV">PV</button>
-          <button class="segment" data-type="AC">AC</button>
-          <button class="segment" data-type="WC">WC</button>
-        </div>
       </div>
 
       <div class="last-update">
@@ -54,12 +54,12 @@
       </article>
 
       <article class="metric-card card">
-        <span class="metric-label">Monthly Target</span>
+        <span id="targetLabel" class="metric-label">Monthly Target</span>
         <strong id="targetText">0</strong>
       </article>
 
       <article class="metric-card card">
-        <span class="metric-label">Actual</span>
+        <span id="actualLabel" class="metric-label">Monthly Actual</span>
         <strong id="actualText">0</strong>
       </article>
 

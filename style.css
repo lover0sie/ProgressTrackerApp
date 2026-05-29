@@ -16,12 +16,20 @@
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
 body {
   margin: 0;
+  min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
   background:
     radial-gradient(circle at top left, rgba(37, 99, 235, 0.14), transparent 32rem),
     var(--bg);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--text);
 }
 
@@ -75,7 +83,7 @@ h1 {
   margin-top: 18px;
   padding: 18px;
   display: grid;
-  grid-template-columns: 220px 1fr auto;
+  grid-template-columns: auto auto minmax(260px, 1fr) auto;
   gap: 18px;
   align-items: end;
 }
@@ -131,7 +139,7 @@ select {
 .last-update {
   display: grid;
   gap: 8px;
-  min-width: 220px;
+  min-width: 150px;
 }
 
 .last-update strong {
@@ -370,4 +378,30 @@ select {
 .input-error {
   border-color: #dc2626 !important;
   background: #fef2f2;
+}
+
+/* Progress bar colors */
+
+.progress-red {
+  background: #dc3545;
+}
+
+.progress-orange {
+  background: #ffc107;
+}
+
+.progress-green {
+  background: #22c55e;
+}
+
+.text-red {
+  color: #dc3545;
+}
+
+.text-orange {
+  color: #fd7e14;
+}
+
+.text-green {
+  color: #22c55e;
 }
