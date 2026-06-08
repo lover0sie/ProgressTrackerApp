@@ -33,9 +33,11 @@ const targetLabel = document.getElementById("targetLabel");
 const actualLabel = document.getElementById("actualLabel");
 
 let selectedType = "PV";
-let selectedView = "monthly";
+let selectedView = "daily";
 let autoRefreshTimer = null;
 let lastDashboardUpdateAt = null;
+let selectedDate = getCurrentDateKey();
+let selectedMonth = selectedDate.slice(0, 7);
 let relativeUpdateTimer = null;
 
 const TYPE_LABEL = {
@@ -44,6 +46,8 @@ const TYPE_LABEL = {
   WC: "Water-Cooled Chiller"
 };
 
+
+// Get current date in "YYYY-MM-DD" format for Asia/Kuala_Lumpur timezone
 function getCurrentDateKey() {
   const now = new Date();
   return now.toLocaleDateString("en-CA", {
@@ -51,6 +55,13 @@ function getCurrentDateKey() {
   });
 }
 
+// Get current month in "YYYY-MM" format for Asia/Kuala_Lumpur timezone
+function getCurrentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+// Count working days (Mon-Fri) in a given month
 function countWorkingDaysInMonth(monthKey) {
   const [year, month] = monthKey.split("-").map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -70,11 +81,7 @@ function countWorkingDaysInMonth(monthKey) {
   return count;
 }
 
-function getCurrentMonthKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
+// Format date to relative time (e.g., "Just now", "5 minutes ago", "2 hours ago", "3 days ago") for Dashbord updating
 function formatRelativeTime(date) {
   if (!date) return "-";
 
@@ -83,24 +90,30 @@ function formatRelativeTime(date) {
 
   if (diffSeconds < 60) return "Just now";
 
+  
   const diffMinutes = Math.floor(diffSeconds / 60);
+  // If less than 60 minutes, show in minutes
   if (diffMinutes < 60) {
     return `${diffMinutes} minute${diffMinutes === 1 ? "" : "s"} ago`;
   }
 
+  // If less than 24 hours, show in hours
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) {
     return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
   }
 
+  // Otherwise, show in days
   const diffDays = Math.floor(diffHours / 24);
   return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
 }
 
+// Update the last update text and start a timer to update it every 30 seconds
 function updateLastUpdateText() {
   lastUpdateText.textContent = formatRelativeTime(lastDashboardUpdateAt);
 }
 
+// Start a timer to update the last update text every 30 seconds
 function startRelativeUpdateTimer() {
   if (relativeUpdateTimer) {
     clearInterval(relativeUpdateTimer);
@@ -109,6 +122,7 @@ function startRelativeUpdateTimer() {
   relativeUpdateTimer = setInterval(updateLastUpdateText, 30000);
 }
 
+// Get date range for daily view (startDate and nextDate are the same)
 function getDateRange(dateKey) {
   return {
     startDate: dateKey,
@@ -116,6 +130,7 @@ function getDateRange(dateKey) {
   };
 }
 
+// Get date range for monthly view (startDate is the first day of the month, nextDate is the first day of the next month)
 function getRange(periodKey, viewMode) {
   if (viewMode === "daily") {
     return {
@@ -131,6 +146,7 @@ function getRange(periodKey, viewMode) {
   };
 }
 
+// Get the start date and next date for a given month key (e.g., "2024-06")
 function getMonthRange(monthKey) {
   const [year, month] = monthKey.split("-").map(Number);
 
@@ -143,6 +159,7 @@ function getMonthRange(monthKey) {
   return { startDate, nextDate };
 }
 
+// Get target from Firestore based on monthKey and type (PV, AC, WC)
 async function getTarget(monthKey, type) {
   const ref = doc(db, "productionTargets", monthKey);
   const snap = await getDoc(ref);
@@ -159,18 +176,22 @@ async function getTarget(monthKey, type) {
   };
 }
 
+// Check if process name starts with "14A" for PV processes
 function isProcess14A(processName = "") {
   return String(processName).trim().toUpperCase().startsWith("14A");
 }
 
+// Check if process name starts with "14B" for PV processes
 function isProcess14B(processName = "") {
   return String(processName).trim().toUpperCase().startsWith("14B");
 }
 
+// Check if process name starts with "H1" for CH processes
 function isProcessH1(processName = "") {
   return String(processName).trim().toUpperCase().startsWith("H1");
 }
 
+// Normalize cooling type to "AC" for air-cooled and "WC" for water-cooled, return empty string for unknown types
 function normalizeCoolingType(coolingType = "") {
   const value = String(coolingType).trim().toUpperCase();
 
@@ -180,6 +201,7 @@ function normalizeCoolingType(coolingType = "") {
   return "";
 }
 
+// Get actual count based on type and date range
 async function getPVActual(periodKey, viewMode) {
   const { startDate, nextDate, isDaily } = getRange(periodKey, viewMode);
 
@@ -227,7 +249,7 @@ async function getPVActual(periodKey, viewMode) {
   return Object.values(pvMap).filter(item => item.has14A && item.has14B).length;
 }
 
-
+// Get actual count for CHILLER based on type (AC or WC) and date range
 async function getChillerActual(periodKey, type, viewMode) {
   const { startDate, nextDate, isDaily } = getRange(periodKey, viewMode);
 
@@ -274,6 +296,7 @@ async function getChillerActual(periodKey, type, viewMode) {
   return count;
 }
 
+// Get actual count based on type and date range
 async function getActual(periodKey, type, viewMode) {
   if (type === "PV") {
     return await getPVActual(periodKey, viewMode);
@@ -286,6 +309,7 @@ async function getActual(periodKey, type, viewMode) {
   return null;
 }
 
+// Start auto refresh timer to reload dashboard every 1 minute
 function startAutoRefresh() {
   if (autoRefreshTimer) {
     clearInterval(autoRefreshTimer);
@@ -395,8 +419,8 @@ async function loadDashboard() {
 
     if (selectedView === "daily") {
       const workingDays = countWorkingDaysInMonth(targetKey);
-      displayTarget = workingDays > 0
-        ? Math.floor(monthlyTarget / workingDays)
+      displayTarget = workingDays > 0 && monthlyTarget > 0
+        ? Math.max(1, Math.floor(monthlyTarget / workingDays))
         : 0;
     }
 
@@ -415,7 +439,9 @@ async function loadDashboard() {
   }
 }
 
-periodPicker.value = getCurrentMonthKey();
+periodPicker.type = "date";
+periodPicker.value = selectedDate;
+periodLabel.textContent = "Date";
 
 document.querySelectorAll("[data-type]").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -434,21 +460,49 @@ document.querySelectorAll("[data-view]").forEach(btn => {
     });
 
     if (selectedView === "daily") {
+
+      // restore previously selected date
       periodPicker.type = "date";
-      periodPicker.value = getCurrentDateKey();
+      periodPicker.value = selectedDate;
       periodLabel.textContent = "Date";
+
     } else {
+
+      // convert current selected date to month
+      if (periodPicker.value) {
+        selectedMonth = periodPicker.value.slice(0, 7);
+      }
+
       periodPicker.type = "month";
-      periodPicker.value = getCurrentMonthKey();
+      periodPicker.value = selectedMonth;
       periodLabel.textContent = "Month";
+
     }
 
     loadDashboard();
   });
 });
 
-periodPicker.addEventListener("change", loadDashboard);
+periodPicker.addEventListener("change", () => {
+
+  if (selectedView === "daily") {
+    selectedDate = periodPicker.value;
+    selectedMonth = selectedDate.slice(0, 7);
+  } else {
+    selectedMonth = periodPicker.value;
+  }
+
+  loadDashboard();
+
+});
+
 refreshBtn.addEventListener("click", loadDashboard);
+
+// make sure daily button is active on first load
+document.querySelectorAll("[data-view]").forEach(btn => {
+  btn.classList.toggle("active", btn.dataset.view === selectedView);
+});
+
 
 loadDashboard();
 

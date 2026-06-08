@@ -27,19 +27,19 @@
         </div>
       </div>
 
-      <div class="field">
-        <label>View Mode</label>
-        <div class="segmented">
-          <button class="segment active" data-view="monthly">Monthly</button>
-          <button class="segment" data-view="daily">Daily</button>
+        <div class="field">
+          <label>View Mode</label>
+          <div class="segmented">
+            <button class="segment active" data-view="daily">Daily</button>
+            <button class="segment" data-view="monthly">Monthly</button>
+          </div>
         </div>
-      </div>
 
-      <div class="field">
-        <label id="periodLabel" for="periodPicker">Month</label>
-        <input type="month" id="periodPicker" />
-      </div>
-
+        <div class="field">
+          <label id="periodLabel" for="periodPicker">Date</label>
+          <input type="date" id="periodPicker" />
+        </div>
+      
       <div class="last-update">
         <span>Last Update</span>
         <strong id="lastUpdateText">-</strong>
@@ -54,12 +54,12 @@
       </article>
 
       <article class="metric-card card">
-        <span id="targetLabel" class="metric-label">Monthly Target</span>
+        <span id="targetLabel" class="metric-label">Daily Target</span>
         <strong id="targetText">0</strong>
       </article>
 
       <article class="metric-card card">
-        <span id="actualLabel" class="metric-label">Monthly Actual</span>
+        <span id="actualLabel" class="metric-label">Daily Actual</span>
         <strong id="actualText">0</strong>
       </article>
 
